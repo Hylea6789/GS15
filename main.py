@@ -1,3 +1,5 @@
+from typing import Optional
+
 from Classes.Utilisateur import Utilisateur
 
 p: int = 201665270259920855767397920814877447408782241119556263250562946574743587126138643687759014887579644968574614550773047679511971903637815898297082341209086681300582289972148613685506069925389324659674924253072250738467392327134096989057363354903644370391721709867648261245817942851683633005181963565130901955691454982900338179115034963414757105798395756048030075018946135754768749404323433116039270920829570773044387968538758083548875367081919104318171216675464471569440461890550460135354511475047724536275087348241485327756583000871688389484112739697559043503
@@ -10,7 +12,7 @@ def main():
     alice = Utilisateur(p, g, nb_cle_otk, "Alice")
     bob = Utilisateur(p, g, nb_cle_otk, "Bob")
 
-    emetteur: Utilisateur = None
+    emetteur, recepteur = None, None
     while emetteur is None:
         choix = input("Qui êtes vous ? 1 : Alice, 2 : Bob")
         if choix == '1':
@@ -23,9 +25,9 @@ def main():
 
     # Echange initial de clé entre emetteur et recepteur via X3DH
 
-    id_pub_a, pk_pub_a, optk_pub_a, optk_i = recepteur.publication_cle()
-    id_pub_b, id_eph, optk_i = emetteur.calcul_sk_emetteur_x3dh(id_pub_a, pk_pub_a, optk_pub_a, optk_i, p, g)
-    recepteur.calcul_sk_destinataire_x3dh(id_pub_b, id_eph, optk_i, p)
+    id_pub_a, pk_pub_a, otpk = recepteur.publication_cle()
+    id_pub_b, id_eph = emetteur.calcul_sk_emetteur_x3dh(id_pub_a, pk_pub_a, otpk.id_pub, p, g)
+    recepteur.calcul_sk_destinataire_x3dh(id_pub_b, id_eph, otpk, p)
 
     while True:
         print("--------------------------")
@@ -35,16 +37,15 @@ def main():
         print("3 : nouvelles clés via dh")
         print("4 : envoyer un message")
         choix = input("commande : ")
-
-
         if choix == '1':
-            print("-emetteur-")
-            print("clé sk partagée :", emetteur.sk)
-            print("clé Ratchet chainée :", emetteur.cle_ratchet.cle_chainee)
-            print("")
-            print("-recepteur-")
-            print("clé sk partagée :", recepteur.sk)
-            print("clé Ratchet chainée :", recepteur.cle_ratchet.cle_chainee)
+            print(
+                "-emetteur-\n"
+                f"clé sk partagée : {emetteur.sk}\n"
+                f"clé Ratchet chainée : {emetteur.cle_ratchet.cle_chainee}\n\n"
+                "-récepteur-\n"
+                f"clé sk partagée : {recepteur.sk}\n"
+                f"clé Ratchet chainée : {recepteur.cle_ratchet.cle_chainee}\n\n"
+            )
         elif choix == '2':
             emetteur.kdf_ratchet()
             recepteur.kdf_ratchet()
@@ -53,25 +54,22 @@ def main():
             eph_pub_e_bin = emetteur.calcul_rachet_emetteur_dh(eph_pub_r_bin, p, g)
             recepteur.calcul_rachet_recepteur_dh(eph_pub_e_bin, p, g)
         elif choix == '4':
-            print("entrer le message à envoyer :")
-            message = input("")
-            print("-", emetteur.name, "-")
+            message = input("entrer le message à envoyer : ")
+            print(f"- {emetteur.name} -")
             message_chiffre = emetteur.envoie_message(message)
-            print("message chiffré :", message_chiffre)
+            print(f"message chiffré : {message_chiffre}")
             message_dechiffre = recepteur.reception_message(message_chiffre)
-            print("-", recepteur.name, "-")
-            print("message déchiffré :", message_dechiffre)
+            print(f"- {recepteur.name} -")
+            print(f"message déchiffré : {message_dechiffre}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 
-
-
-'''
+"""
 Créer un menu utilisateur permettant de respectivement
 
 - Envoyer un fichier
 - Envoyer un message
 
-'''
+"""

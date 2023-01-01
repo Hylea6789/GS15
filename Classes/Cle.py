@@ -1,5 +1,5 @@
 import random
-from .Fonctions import exponentiation_rapide
+from utils import exponentiation_rapide
 
 
 class Cle:
